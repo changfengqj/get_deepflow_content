@@ -1,0 +1,112 @@
+<?php
+use Drupal\Core\Controller\ControllerBase;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Drupal\node\Entity\Node;
+use Drupal\user\Entity\User;
+use Drupal\Core\Url;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Routing\Access\AccessInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\File\FileSystemInterface;
+
+function get_deepflow_content_cron(){
+	$operations = array();
+  $site_config = \Drupal::config('get_deepflow_content.client_key');
+  $server = $site_config->get('server');
+  $key = $site_config->get('key');
+  $token = $site_config->get('token');
+  $type = $site_config->get('type');
+  $image_field = $site_config->get('image_field');
+  $body_field = $site_config->get('body_field');
+  $brief_field = $site_config->get('brief_field');
+  $keywords_field = $site_config->get('keywords_field');
+  $signature_client = hash('sha512', $key.$token);
+  $url = $server.'/personal-admin/website/publisher/content?token='.$token.'&signature='.$signature_client;
+  $data = [
+    'token' => $token,
+    'signature' => $signature_client,
+  ];
+  //$content_json = self::https_post($url,$data);
+  $content_json = file_get_contents($url);
+  // print $content_json;
+  
+  $content_arr = json_decode($content_json);
+  //print_r($content_arr);
+  //adsf();
+  if($content_arr->node_count > 0){
+    foreach ($content_arr->data as $record) {
+      $title = $record->title;
+      $content = $record->body;
+      $image = $record->image;
+      $brief = $record->brief;
+      $keywords = $record->keywords;
+      save_deepflow_data($title, $content,$brief,$keywords, $image,$type,$body_field,$image_field,$brief_field,$keywords_field);
+    }
+  }
+}
+function save_deepflow_data($title,$body,$brief,$keywords,$image_path,$type,$body_field,$image_field,$brief_field,$keywords_field){
+
+    $current_uid = \Drupal::currentUser()->id();
+    
+    if ($image_path != '') {
+      $file_system = \Drupal::service('file_system');
+      $file_repository = \Drupal::service('file.repository');
+        
+      // 准备目标目录 (public://images/)
+      $directory = 'public://images/' . date('Y-m');
+      $file_system->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+
+      // 获取文件信息
+      $file_name_arr = explode('/', $image_path);
+      $file_name_total = $file_name_arr[count($file_name_arr)-1];
+      $file_name_total_arr = explode('.', $file_name_total);
+      $file_name = $title.'.'.$file_name_total_arr[1];
+      // 保存文件到Drupal
+       
+      $file_data = file_get_contents($image_path);
+      $file = $file_repository->writeData($file_data, $directory . '/' . $file_name, FileSystemInterface::EXISTS_RENAME);
+      // 设置文件为永久状态
+      $file->setPermanent();
+      $file->save();
+
+      // 记录文件使用 (关联到即将创建的节点)
+      \Drupal::service('file.usage')->add($file, 'node', 'article', 0);
+    }
+      //创建node
+    $node = Node::create(['type' => 'article']);
+    $node->status = 1;
+    $node->title = $title;
+    $node->created = time();
+    $node->set('uid', $current_uid);
+    $node->enforceIsNew();
+    if($body != '' && $body_field != ''){
+      $body = [
+        'value' => $body,
+        'format' => 'full_html',
+      ];
+      $node->set($body_field, $body);  
+    }
+    if($brief != '' && $brief_field != ''){
+      $field_brief = [
+        'value' => $brief,
+      ];
+      $node->set($brief_field, $field_brief);  
+    }
+    // 设置元标签字段
+    
+    if ($keywords_field != '' && $keywords != '' ) {
+      $node->set($keywords_field, serialize([
+        'description' => $brief,
+        'keywords' => $keywords,
+      ]));
+    }
+    if ($image_path != '' && $image_field != '') {
+      $node->set($image_field, [
+        'target_id' => $file->id(),
+        'alt' => $title,
+        'title' => $title,
+      ]);
+    }
+    $node->save();
+}

@@ -1,0 +1,10 @@
+get_deepflow_content.settings:
+  title: deepflow配置
+  route_name: get_deepflow_content.settings
+  parent: system.admin_config
+  weight: 13
+
+get_deepflow_content.import:
+  title: 获取deepflow内容
+  route_name: get_deepflow_content.import
+  parent: system.admin_content
