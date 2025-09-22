@@ -1,3 +1,6 @@
+get_deepflow_content是一个Drupal10的模块，从Deepflow官网获取AI生成的内容。DeepFlow基于AI的智能化SEO、GEO专家，智能SEO/GEO及长文章媒体矩阵，全网曝光 提高AI搜索排名及SEO排名，
+
+
 一、DeepFlow是什么？
 
 DeepFlow基于AI的智能化SEO、GEO专家，智能SEO/GEO及长文章媒体矩阵 全网曝光 提高AI搜索排名
