@@ -1,9 +1,0 @@
-get_deepflow_content.settings:
-  route_name: get_deepflow_content.settings
-  title: deepflow配置
-  base_route: system.admin_config
-
-get_deepflow_content.import:
-  route_name: get_deepflow_content.import
-  title: 获取deepflow内容
-  base_route: system.admin_content
