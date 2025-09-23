@@ -94,7 +94,9 @@ function save_deepflow_data($title,$body,$brief,$keywords,$image_path,$type,$bod
       $node->set($brief_field, $field_brief);  
     }
     // 设置元标签字段
-    
+    \Drupal::logger("get_deepflow_content")->info('$keywords_field'.$keywords_field);
+    \Drupal::logger("get_deepflow_content")->info('$keywords'.$keywords);
+    \Drupal::logger("get_deepflow_content")->info('$brief'.$brief);
     if ($keywords_field != '' && $keywords != '' ) {
       $node->set($keywords_field, serialize([
         'description' => $brief,

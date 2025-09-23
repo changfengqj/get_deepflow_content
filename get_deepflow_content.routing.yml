@@ -1,15 +1,19 @@
 get_deepflow_content.settings:
-  path: '/admin/config/deepfow/settings'
+  path: '/admin/config/deepflow/settings'
   defaults:
     _form: '\Drupal\get_deepflow_content\Form\getDeepflowcontentSettingForm'
     _title: 'get deepflow content setting'
   requirements:
     _permission: 'admin get deepflow content'
+  options:
+    _admin_route: true  # 明确标记为管理员路由
 
 get_deepflow_content.import:
-  path: '/admin/content/deepflow/import'
+  path: '/admin/content/deepflow-import'
   defaults:
     _form: '\Drupal\get_deepflow_content\Form\importForm'
     _title: '导入deepflow内容'
   requirements:
     _permission: 'admin get deepflow content'
+  options:
+    _admin_route: true  # 明确标记为管理员路由
